@@ -1,0 +1,82 @@
+{
+    "min_discharge": 150.0,
+    "prediction_hours": 3,
+    "time_step": 10,
+    "history_hours": 2,
+    "delay_params": {
+        "150-300": {
+            "base_delay": 15,
+            "correlation": 0.82,
+            "sample_size": 6
+        },
+        "300-500": {
+            "base_delay": 0,
+            "correlation": 0.858,
+            "sample_size": 8
+        },
+        "500-800": {
+            "base_delay": 10,
+            "correlation": 0.707,
+            "sample_size": 1
+        },
+        "800-1000": {
+            "base_delay": 12,
+            "correlation": 0.7,
+            "sample_size": 0
+        },
+        "1000+": {
+            "base_delay": 10,
+            "correlation": 0.7,
+            "sample_size": 0
+        }
+    },
+    "response_rates": {
+        "increase": {
+            "150-300": 0.0017,
+            "300-500": 0.0029,
+            "500-800": 0.0035,
+            "800+": 0.003
+        },
+        "decrease": {
+            "150-300": 0.001,
+            "300-500": 0.0027,
+            "500-800": 0.0033,
+            "800+": 0.0028
+        }
+    },
+    "hysteresis_correction": {
+        "increase": 1.05,
+        "decrease": 0.95
+    },
+    "water_level_correction": {
+        "low": 1.2,
+        "medium": 1.0,
+        "high": 0.9
+    },
+    "stability_thresholds": {
+        "stable": 0.05,
+        "semi_variable": 0.15
+    },
+    "validation_results": {
+        "mae": 0.426,
+        "rmse": 0.712,
+        "sample_size": 34
+    },
+    "test_results": {
+        "mae": 0.288,
+        "rmse": 0.428,
+        "sample_size": 103,
+        "range_distribution": {
+            "150-300": 70,
+            "300-500": 33
+        }
+    },
+    "data_info": {
+        "train_size": 884,
+        "val_size": 234,
+        "test_size": 303,
+        "train_period": "2022-07-19 04:30:00 - 2024-11-02 19:30:00",
+        "val_period": "2022-09-19 09:20:00 - 2024-11-02 04:30:00",
+        "test_period": "2022-07-19 13:30:00 - 2024-11-02 13:30:00"
+    }
+}

@@ -1,0 +1,15 @@
+{
+  "original_file": "/mnt/c/users/kishida/cursorproject/kotogawa-data/統合データ_水位ダム_20250730_030746.csv",
+  "split_ratio": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15
+  },
+  "split_files": {
+    "train": "統合データ_水位ダム_20250730_030746_train.csv",
+    "val": "統合データ_水位ダム_20250730_030746_val.csv",
+    "test": "統合データ_水位ダム_20250730_030746_test.csv",
+    "original": "/mnt/c/users/kishida/cursorproject/kotogawa-data/統合データ_水位ダム_20250730_030746.csv"
+  },
+  "timestamp": "2025-07-30T14:13:53.736913"
+}

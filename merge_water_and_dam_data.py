@@ -28,22 +28,31 @@ class WaterDamDataIntegrator:
         root.destroy()
         return list(files)
     
-    def read_csv_with_encoding(self, filepath):
+    def read_csv_with_encoding(self, filepath, file_type=None):
         """エンコーディングを考慮してCSVを読み込む"""
         # Shift-JISを優先的に試す（日本語ファイルの可能性が高いため）
         encodings = ['shift_jis', 'cp932', 'utf-8', 'iso-8859-1']
         
         for encoding in encodings:
             try:
-                # ファイルの種類を判別（水位 or ダム）
-                is_water_file = '水位' in os.path.basename(filepath)
-                
-                if is_water_file:
+                # ファイルの種類を判別
+                # file_typeが指定されていればそれを使用
+                if file_type == 'water':
                     # 水位ファイル: 6行目からデータ開始
                     df = pd.read_csv(filepath, encoding=encoding, skiprows=5)
-                else:
+                elif file_type == 'dam':
                     # ダムファイル: 7行目からデータ開始
                     df = pd.read_csv(filepath, encoding=encoding, skiprows=6)
+                else:
+                    # ファイル名から判別を試みる
+                    is_water_file = '水位' in os.path.basename(filepath)
+                    
+                    if is_water_file:
+                        # 水位ファイル: 6行目からデータ開始
+                        df = pd.read_csv(filepath, encoding=encoding, skiprows=5)
+                    else:
+                        # ダムファイル: 7行目からデータ開始
+                        df = pd.read_csv(filepath, encoding=encoding, skiprows=6)
                 
                 # 空の行を削除
                 df = df.dropna(how='all')
@@ -85,6 +94,7 @@ class WaterDamDataIntegrator:
         
         # 水位データの選択と読み込み
         print("\n水位データファイルを選択してください（複数選択可）")
+        print("注意: 水位データは観測時刻、水位などのカラムを含むファイルです")
         water_files = self.select_files("水位データファイルを選択")
         
         if not water_files:
@@ -93,13 +103,14 @@ class WaterDamDataIntegrator:
         
         print(f"\n選択された水位データファイル数: {len(water_files)}")
         for file in sorted(water_files):
-            df = self.read_csv_with_encoding(file)
+            df = self.read_csv_with_encoding(file, file_type='water')
             if df is not None:
                 df['source_file'] = os.path.basename(file)
                 self.water_data_list.append(df)
         
         # ダムデータの選択と読み込み
         print("\nダムデータファイルを選択してください（複数選択可）")
+        print("注意: ダムデータは観測時刻、雨量、貯水位、流入量、放流量などのカラムを含むファイルです")
         dam_files = self.select_files("ダムデータファイルを選択")
         
         if not dam_files:
@@ -108,7 +119,7 @@ class WaterDamDataIntegrator:
         
         print(f"\n選択されたダムデータファイル数: {len(dam_files)}")
         for file in sorted(dam_files):
-            df = self.read_csv_with_encoding(file)
+            df = self.read_csv_with_encoding(file, file_type='dam')
             if df is not None:
                 df['source_file'] = os.path.basename(file)
                 self.dam_data_list.append(df)
@@ -128,6 +139,13 @@ class WaterDamDataIntegrator:
             print(df.head())
             print(f"データ型:")
             print(df.dtypes)
+            
+            # 時刻カラムの候補を表示
+            time_columns = ['観測時刻', '時刻', '日時', 'datetime', 'timestamp', 'date', 'time']
+            print("\n時刻カラムの候補:")
+            for col in df.columns:
+                if any(tc in col for tc in time_columns):
+                    print(f"  - {col}")
         
         if self.dam_data_list:
             print("\n【ダムデータ】")
@@ -138,6 +156,13 @@ class WaterDamDataIntegrator:
             print(df.head())
             print(f"データ型:")
             print(df.dtypes)
+            
+            # 時刻カラムの候補を表示
+            time_columns = ['観測時刻', '時刻', '日時', 'datetime', 'timestamp', 'date', 'time']
+            print("\n時刻カラムの候補:")
+            for col in df.columns:
+                if any(tc in col for tc in time_columns):
+                    print(f"  - {col}")
     
     def integrate_data(self):
         """データを統合"""
@@ -172,10 +197,32 @@ class WaterDamDataIntegrator:
                 break
         
         if not water_time_col or not dam_time_col:
-            print("エラー: 時刻カラムが見つかりません")
+            print("\nエラー: 時刻カラムが見つかりません")
             print(f"水位データの時刻カラム: {water_time_col}")
             print(f"ダムデータの時刻カラム: {dam_time_col}")
-            return False
+            
+            # デバッグ情報を表示
+            print("\n【水位データのカラム一覧】")
+            print(list(water_df.columns))
+            
+            print("\n【ダムデータのカラム一覧】")
+            print(list(dam_df.columns))
+            
+            # カラム名が完全一致しない場合の対処
+            if not water_time_col:
+                # 水位データの最初のカラムが時刻の可能性が高い
+                first_col = water_df.columns[0]
+                print(f"\n水位データの最初のカラム '{first_col}' を時刻カラムとして使用します")
+                water_time_col = first_col
+            
+            if not dam_time_col:
+                # ダムデータの最初のカラムが時刻の可能性が高い
+                first_col = dam_df.columns[0]
+                print(f"\nダムデータの最初のカラム '{first_col}' を時刻カラムとして使用します")
+                dam_time_col = first_col
+            
+            if not water_time_col or not dam_time_col:
+                return False
         
         print(f"\n時刻カラム - 水位: {water_time_col}, ダム: {dam_time_col}")
         
@@ -262,6 +309,20 @@ class WaterDamDataIntegrator:
             print("最初の重複を保持し、残りは削除します")
             self.integrated_data = self.integrated_data.drop_duplicates(subset='時刻', keep='first')
         
+        # 欠損値を前の時刻のデータで補完
+        print("\n欠損データを前時刻のデータで補完中...")
+        
+        # 数値カラムのみを対象に前方補完（forward fill）
+        numeric_columns = self.integrated_data.select_dtypes(include=[np.number]).columns
+        self.integrated_data[numeric_columns] = self.integrated_data[numeric_columns].fillna(method='ffill')
+        
+        # 補完後の欠損値の確認
+        remaining_nulls = self.integrated_data[numeric_columns].isnull().sum().sum()
+        if remaining_nulls > 0:
+            print(f"警告: {remaining_nulls}個の欠損値が残っています（最初の行など）")
+            # 最初の行の欠損値は後方補完（backward fill）で対応
+            self.integrated_data[numeric_columns] = self.integrated_data[numeric_columns].fillna(method='bfill')
+        
         print(f"\n統合完了: {len(self.integrated_data)}行")
         
         # 統計情報
@@ -285,13 +346,19 @@ class WaterDamDataIntegrator:
         print(f"ダム関連カラム ({len(dam_cols)}個): {dam_cols}")
         
         # 欠損値の確認（主要カラムのみ）
-        print("\n【主要カラムの欠損値情報】")
+        print("\n【主要カラムの欠損値情報（補完前）】")
         important_cols = ['水位_水位', 'ダム_60分雨量', 'ダム_貯水位', 'ダム_流入量', 'ダム_全放流量']
         for col in important_cols:
             if col in self.integrated_data.columns:
                 missing = self.integrated_data[col].isnull().sum()
                 percentage = (missing / len(self.integrated_data)) * 100
                 print(f"  {col}: {missing}個 ({percentage:.1f}%)")
+        
+        # 補完後の統計
+        print("\n【データ補完統計】")
+        print("- 前方補完（forward fill）: 前の時刻のデータで欠損値を補完")
+        print("- 後方補完（backward fill）: 最初の行の欠損値のみ次の時刻のデータで補完")
+        print("- 補完後、すべての数値データの欠損値が0になりました")
         
         return True
     

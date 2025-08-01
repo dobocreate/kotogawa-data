@@ -1,0 +1,47 @@
+{
+    "min_discharge": 150.0,
+    "prediction_hours": 3,
+    "time_step": 10,
+    "history_hours": 2,
+    "delay_params": {
+        "150-300": {
+            "base_delay": 25,
+            "correlation": 0.824,
+            "sample_size": 0
+        },
+        "300-500": {
+            "base_delay": 2,
+            "correlation": 0.845,
+            "sample_size": 1
+        },
+        "500+": {
+            "base_delay": 10,
+            "correlation": 0.636,
+            "sample_size": 0
+        }
+    },
+    "response_rates": {
+        "increase": {
+            "150-300": 0.0019,
+            "300-500": 0.0022,
+            "500+": 0.0037
+        },
+        "decrease": {
+            "150-300": 0.0013,
+            "300-500": 0.0016
+        }
+    },
+    "hysteresis_correction": {
+        "increase": 0.94,
+        "decrease": 0.9
+    },
+    "water_level_correction": {
+        "low": 0.5,
+        "medium": 0.4,
+        "high": 0.8
+    },
+    "stability_thresholds": {
+        "stable": 0.05,
+        "semi_variable": 0.15
+    }
+}

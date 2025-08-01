@@ -1,0 +1,9 @@
+{
+	"folders": [
+		{
+			"uri": "vscode-remote://wsl+ubuntu/mnt/c/users/kishida/cursorproject/kotogawa-data"
+		}
+	],
+	"remoteAuthority": "wsl+ubuntu",
+	"settings": {}
+}
